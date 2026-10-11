@@ -1,5 +1,5 @@
-// 建技規則函令查詢 iPad 離線版 — 版本 20261011012919
-const CORE = "bci-core-20261011012919";
+// 建技規則函令查詢 iPad 離線版 — 版本 20261011020242
+const CORE = "bci-core-20261011020242";
 const CORE_FILES = ["index.html", "data.js", "manifest.json", "icon.png", "apple-touch-icon.png", "favicon.ico", "lib/pdf.min.js", "lib/pdf.worker.min.js"];
 self.addEventListener("install", e=>{
   e.waitUntil(caches.open(CORE).then(c=>c.addAll(CORE_FILES)).then(()=>self.skipWaiting()));
