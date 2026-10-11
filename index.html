@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>建技規則函令查詢</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="建技函令">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script src="lib/pdf.min.js"></script>
+<style>
+#syncMsg{font-family:var(--f-body);font-size:12px;color:var(--ink-3);max-width:28ch;line-height:1.3}
+#pv{position:fixed;inset:0;z-index:10000;background:#525659;display:flex;flex-direction:column}
+#pv.hidden{display:none}
+#pv .bar{display:flex;align-items:center;gap:8px;padding:8px 10px;padding-top:max(8px,env(safe-area-inset-top));background:#2b2d30;color:#fff;font-size:15px}
+#pv .bar .t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#pv .bar button{font:inherit;font-size:15px;padding:6px 12px;border-radius:6px;border:0;background:#4a4d52;color:#fff}
+#pv .bar button.x{background:#1f4e79}
+#pvBody{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:10px 0}
+#pvBody .pg{margin:0 auto 10px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);position:relative}
+#pvBody .pg canvas{display:block;width:100%;height:100%}
+#pvBody .pg .no{position:absolute;right:6px;bottom:4px;font-size:11px;color:#999}
+#pvMsg{color:#fff;text-align:center;padding:30px;font-size:15px}
+</style>
+
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAX6UlEQVR4nM2beZidVZngf+8533LvrTVkDwQJ0gQDqSyFJoJQYNtsIjoNFUFA1Bml3Xqedmm7aW3IM+PotOPYjzLDZB5t+xEEp2q6W0dbBRcoREgkRRaSGCIkQCD7UpW6dbfvO+edP757a0uFLIDt+zzfc6vu/c67nfe82zlHeB1AwTzS1WUu7+tLJ/t9VWdnaONibupwzgIcbKo4V22u3N7fn0z2/sNdXcFlfX1ewL/WvMprhUhBeru7TXdvrxfQxvc9HR3z0sAvNtAB8iaE01GmqmoLQlQfXBORIYSDoryk6FaEDSYxG1Zs3LhjLL89k9B4NfBaKEB6urvNit5e1/jinzoXLnXwHpSrHCwqWBsFAl7BozgFVR2RQAARwQoYBCOQKpSdqwFPW/QnKD/oXrdpbYNGT3e3XdHb63mVinhVCujpxq7oxQGs6uwsTCG5wcB/8OglBWtJvFLzHq/q6owKCCKITqAtIzpRGu8aERsZQ2iEsvOg+mtV/VbFmZ73b9w4PJGHU4FTUkDD3Ff09rpVnZ3hFNIPifpPxdae61WpeI+qpogYqU/wKfKnCoqqF5EgNoZAhIp3v1Pka4cJv3l7f3/S091tT3VZnDRjCqbhjL63eOE7Aitfjo3prKmn5ryrz7A9WbwnRFvximpsjY3EUPW+P8HdcVP/5ocm8naiYE7m5Z7ubivgV3V2FnqXLvxGFMjPrEjnUJq6mlcvIvb1Eh5ABGNEbOLVD6WpsyKdsQQP9iy54O6vdHQ0Cfie7u6Ton/CFnBnV1ewsq8vvXfxggU5Y7+bt3bxkHMeVQxiALRh7K+Jfz4GtwpSx+/BI9Birak4v77mklvet+G3mx/u6gqOFYInwglZQEP4+5d0XFWwwWOhMYuPpGlqvBoRMUlkSEODKJj09ZI+wy0KaWhIIoMIxno1R9I0DYwsjoLgsQcWL7z68r6+9M6uruBEcB7XAhravH/xwptyVu71YGvqXeCxw60hh2fk68IrYc3TPFCj5XANADW8emsQkPqqHpoSUWyPSCKDihAknin7yjQdSUgNLhRjLbiy+ttufmrTd0/EEl5RAeOED8z9iffqQa1XMzg15uDsQubifSalr/v8fDFh2stlwprD21eRsggYpySR5cDpecrNYebp6vTUCCowdXeJtgNVnBFvQCJjZDj1N9+y/un7j6eEYy6Bnu5ue3lfX/rdpedfGVu5L/XeN4QvtYQcnF3AeB0RHjLGTKqUm0J2z2ummg8QNzHin7jw4pRqPmD3vGbKTSEm1RHhIVO8ccrBWQVKLSHWq/Ggifc+b+Xe7yzpuOryvr70lRzjpKzpnRhZif9u5wXnxZjVCq2pVzWC8QK7zm4hjWwmfB2DqmKMQbPIjRrBOs/M54tEFYeejCXUhU9iy555zThrRmiJCN57RBqEM1phzTF7+xBGwSs+MCIoQyJ+2Q39m7beeSdm5cqjQ+RRFqAgvVu6pWf58rz19AQibYn3XgxGnGZrMFcX3oBXRVUJAkutlqCqiBHEKy4w7J/bhA9kZB2fkPwefCDsO7MJF2TCixFUlVotIQgsqorXjAfxSi1nKbZHiFPEYBLvfWikNfX0rOrsLJy/pfuo7HNSBTQyPFctfqUlDBaWnEuNiG1oergtQjyIgHolDCwXLevgisuXsaTjXKy1OOcyJbiMsYOzC4hOIK9jnomzr8rB2QVqOVsXSHDOYa1lSce5XHH5Mi5a1kEYWNQrUneUw21R5ocUjIgtOZe2hMHCVl/9uxW9va63u/soecd9US8wXG/n+ZflrP14MXGpEQmyWVGqeZsxpQqSMbVwwTmcecZM4jhkwfx5dF28hDiOSNMUMYJJM6sZao+wic9CuYBawdefhjMTwCaeofbM25s0Ez5NU+I4ouviJSyYP484DjnzjJksXHAOzjmy4iJTdi1vR/ySEQmKiUtz1n78gUXnX7ait9dN9Acjc6Igd4Gcv2BB4GKzNmftworzTgSLZDF4YHrModkFrFOc9zQ3Ffjjrjdj6ubpvZLLRRweGOJXj6+jWksQyYSzqZIbTkkjgzejQkM24+IzJxrUPJWmABdkFZOqEkchl1y0hCntLVQqNYyRui9QftH3JMXhEtYYnBVO212ifX8VH2SWoKouZ62ter/RVNybN2/Zkt5Vn4NxFnBXV5ddCV5z9rbmIFhYds6NS2sFavmg/qfgnGf6tHbiOBxxSrlcRJpmhVlLSxPeK1Iv/XwgFKdEVAsBSWxIQ8EF2ZOGhiQ2VAsBxSlR5jOUESFbWpoASFNHLheNOMI4Dpk+rR3nPFKfy1o+GLfURMSWnXPNge3QnL1tJfi7urrsGLHqkwD0Ll+ec7Xi5kjMWYmqTlwiu+c1U8sFGKBWS+hcfB7nvvFMFCVJHS/v2seOF3Zx4OAgkEWFcaAcI+688jvee0CYNrWNs86cw9zTZxAEFkHY9tyL9K/fShSFeCCqpMzeUZyI0kdiJFG/w0RNF3SvXl1pxBAD8HBXlxVQn5S6m20wr5pRNOMwWMk8ct1riQitLU0YKzz/4m4efnQtq5/cxL79hzFGjhZ+rLpfCSZ5xxiDMcK+/YdZs3YTv3h0LTte2IUxhtaWppGQKGSRp+EIx6A0Ve98k7VnUy3dIKAP160gALisr88B4r3/qBPRiTwIjKzbrGWh2MBSKld49PH1vPjSXqwxRFGY6Utfn3ogDLMlODhYZPWTm9i1+wCzZ03D1sMiZJHKW8E6HRdgBHCq6kQ/CtxXlxnpAbsC3P0XdiwJlbVOR2q60cE+y8j2zGse/U4yx5emboSx10vwidCY8SRJs6VQ56UBs3YUictpNmHjQa2IVk3aecuTW9b3gDXTu7oEwHh/fd4ao1n76ihQA2NNo0EwDIOsl/V7Er5BW1UnVbwKx0zwVdXlrTHWmesBpnd1ibmsr89lJbZclXgdVe9JMPNvBSdNW5DEK4JcpSCX9fU5I6DfXbLkTGBhzXvkGPozfrQR8YcMohwz7RbE1LwHWNjbuWCuNKJAYJIlTdZG9e7tURYgQLEtnGxN/cGBGqHYFh4r4IhXdXlrY+fsEmjMtrLISv2vca9n9XixPWJwem5c6Xs8kHoolFehtFPBIV4ZnJ6j2BZhJi/FNRBQo4uhHgY98iY/ybviIY0Mh2bmT1j4RpZWK1eplwyEUTRaKv8ecIhXDs3Kkyul2FTHOW8h26AxMH9EAQJneFVUxnjAek0+MD1PGpms13eciRCpFy65mHPOn09zSzPFoSIv/G471UqVIAiOK8BrgqM+cQPTc0x7uVSf8uw3RcRnlelcgGBVZ2coWjutvvhlLJJqIciqshPo6ogI3jkKTU1cecM7mXn6rKw3IMLel/fw4P/9VyqlEsbaYwrwWuDIEI0u3ZbDtawh0yi8BHEAKlMf7uoKzMy4mFPVlvq+VCOnRLwy1B6dVE/POU9zWzOzzphNkqTUqjWSJGXmGbNpbmvGueN3RV4LHMBI+j7UHo3vXIHUu1bN+9mfC3Q4Z7EuGiejz1rP5ZYw68GdgA9SVcIoYP+ufTz8o5+zYOlC4lxMtVJlc/9G9u3aRxi9svk2cOzbtY9f/vBnnN/ZMYJjy1MnhmMEJCuvyy0haWjGWbFmv0fhQBgc3TtvDCyEpJE5Kc+vCsYaNj+1kRe3biOMY1ySktRqBGGQlc0ngMNaw3NPb+HFZ35HvlCgVq0yVCwThAEnlfto5guqhYCmI7WjiiSAQJoqjnJYG5f/KVQKNuvSTFbCStaQEBHQsUVHtnVTyOdYt3OArbsHKJdKzJ/VxuI3TCWMY/QEFGqNsGlPiWd2DzI0NMT8WW10nj0day1+ZPO4zla9DsjMegJuzVLjSsHSNDiG/ey3WtKepMHeanOlTWpDWeNCFUVUIIntUbV5JrQhTRPSamWkESL18KTOkcvn+PlzAzzx3AEEz6c/81ku6Ojglw+sYlZtL0EYH9OEVSEMDD/bsofV2w+OGb+IXz6wimlHXqh3mEz2me1CY4whiGOCIELVj+Kvb6UlcTaZdSenIiJetDiT6ZXg9v7+5IGlCw/ZUYWhVnD1ra4GGGNJahWSapXWqdOZ09HJ7LPOoXXaDOJcniRJqFbKPPiTn7L6wR9jvOOSSy/ljjv+GoB8ocB3Pv9hls0/k1I1YWLFoarEoeWZPUOsfXEASStc2nXZyPgoDOi7/25W3HgjYRwRhiHVSpkjB/ax+/ln2fXcMxw5sI8wjgmjHN5nNZ0ouMCMZLEKagEjevDyvr604QN2moYFIPh6Td0wARGhXDzCtNPP5MIr38P8t1xMy/RZYIIRc8Q7MC088NAakmqVtrYWdr70Ejt37mTu3LmsefxxfrevyPLzJp38kQl7Zu8QqJLL5ceNf6zvEQ6Hp7Hk6veBHwJjR0f5lOKBvWz9za9Z+9N/4cDLL5Braq1bgmbNVyMYpwiqRgQ8O2EkEdKtDf/QmJi66IBSLZdYdvWfcumNHyRuPQ1qFbRcQkda3Zk5SkF5YcfzWGuoVmv8dvNm/t27rmXO6XP49eNr+KNZbbh6n/CorFsMKoZSLcWIUK1VRsaffsZcfvmLX3DVFW/HuyNoaRgxoxuPgtDcfhoXXruChZe8g0f/z7f5zYPfJ8rlEQQdsyOgZIcIFLaOKABhQ6rUuxyjs4FAUqlw5W0f48LrboZqEV8cRIzJnjECOFWMjZg9ZxaVao0/ueIKvPf87KGHeOH5HdgwR94q1eEhUhMSRtE4BSS1GiRl8hZK5TJXvONyQPjZQw+xc+eLiBFmz56FsRFOSke13DRN0dogcS7Hn3zks0yZNYeHvnMPYT7fcHoNTUuqgJcNUC+GUh+uKzlXM2ARVLxiVagMD9N1/a1ceN0t+OHDqHMYa4/dMlDl+vdcSyVJuOrqa7j6mndiRGhrn0KlNMxf3PF5LlnxAfLNLZSGjlArFamVipSGhsg1NXNJ9218+vNfYKg4xDXXXDsyvrW1DfWe91x3zdGeflSuLEN0Dj98mAuvu4Wu62+lMlzEqjSSITWCLTtXtdatA0YPK31v6cInc8Z0Vrx3AWJfmC7MWP5mbv2b/4ZPqpmmjvZc4/71qph8gTv+8m/4r1/9Bvk4JggCypUKn/rzj/Kl//4VwJEMHuLA88/y243rAXhTx2KmvuEcorYpIAF3fOYvjx7/Hz/Gl/7ui/hKCTORj0n48oAJY+774qfZu3otb9ivpKjLGWMr3q+96amn36JA8EhXl728ry99AP1JaKSz4lH1St4HdHW/H6yFmh/jdMZAFDaOMYEIBkVrVf7Ll/8Tixd38KN/fRCAd73zCrpvXIErHQGE4arnq9/+Zx57Yg0Ab7toO5+/4zPYchlUs/GLOvjRjxvjr6T7vTegSRUThWTBbNT/kE7Y/RbJnLK1XNp9Gz96fB3qEzBoaISq4yeAPtLVFYw0RXsWLVosgfanIJKkkkxv4bp7/5HWaTPRJBlv9iLgPW7XXvTgAJqkSBggU6dg58wAYyDXzOh5JQOlIzjvsc1t/PmffYK7V/0DM6aeBsC+g4f4xO0f4uv/627c0CDGGqTQOn58pXh8mmN7g6pIGHLkwF7+360fINw/BGGgFtQ5t/TG9Zs39IANVoBTENmwYcP9Sy74TcHaZbUgcG7vIXto+3ZaZ82FWm28mXlP8tRm/J79GeEG7NyN37OfYMkCfHGAsTHFWjuyFyoiGCCqO0IDWTI15nc3YbwRIV235Zg0w6ULqB9VamgAgohDz23H7T1EHOVdJGLK3q+5af3mjfU2gzMAj2SbBGrU3GNFxBvBVBIOrF0HYkc1qwqBxQ8cwe3eB7k4WwZRkH3mYtzu/ejgEDaOsEaw1mBtlmYFUYgkVb7whb/izz7yIYIgIAgCPvqRD/G3X/gcklQJ4nBEYdaaDEccoYNDr0jTDwxBMIFXsRxYuw5TyeoAm6WR99TN3zJGxeO2xmIbnFUulbTt3HPM1fd9Ows5Yx2e6uQW4D1m1nTCpecf7ZiMYeDwAIV8jqitDWjmo//+/QDc863vAEVqg4OUyhXap7SDn1D2nizNelfpx7d8kCPPPOvzTQWpOTf51higd3V12RWrV5cV+VIoiMnldGDrNvasXgO5AurGbBcYQ7j0fILFC7Cnz8TMmIo5fSbB4jdljEyI0c45iFv5+6/fwyVvv5YDu/fy8s5trFm7jjVr1/Hyzm3s372XS95+LX//9Xsgbs3GTFDgidJU5yBXYM/q3zC4dRsmn9NIECd8acXq1eX65qiOtYBx2+M+Z5/MBUHH0OARN+eiZfbt//t/orUKIhM65mEwJgrU0U30yNT790HAnj37uPX9H+aZrdtojWPOOeeNIPDs755jsFph/vxzue/ebzJr1gxI08nzjROgqeqRKMcvP/Ixdj2+xrW0tdpymm48ItGFu/r73UpGj2aMozByQGLR+ZcFYfBwAml1qBhc+pUvcua73o0OHUbGthAmS0qOkSSpKpLLQa3Gj37+MDO27WBRObsesCEfsvePzuJd77gc4hitVF4x2XolmpqmSMtpvPjD7/PoZ+8gbmlJAwjS1F22Yv2mvoaMI0Mn4mq88MCSC+5ujaKPD5RKaWHa1ODK+/6R/IxpaLVaz8NPHlR9ZkX5digPMPjVVSDQ9qnbR75T708dv/dIHFPZf4Cf3vwBSgcOpu2FQjBQq/2Pm9dt+sRE4SdVgJKdBGfnzkhrw6tzYdgxeHjAnfG2i+xl93w9SzCcO3UmAZ+mSBzB4XqXYkobWq1hguDUj5V7nyVtJuCRj32Sl371uGub0m7LSbLRRE3LmTu3NtmJ8qOkENDNC3p1xerV5VT0vUmaDDa1t5mdjz7m13xhJRLFiA0ygqcAAtggwKQOM6U9e1KHfZXCiw2QKMeav72LnX2P+ab2NpOk6aATfe+K1avLmxf06kTh4Rj7gCtXZqeub+7ftLWq/r04p4Up7Wz75x/4Jz53Bx6QXB6dxOGdMEjdeaXpMf3GiYCmKZLLoQhP/NUdbPunH/jClHbEOV9NeO/N/Zu29nR328nOCMJx+r0Tj8o6Y7R06LDOeetbzPL/fBfNZ85DS4PZujnFJXGq0LBAaWpn+MXtrP78Sl5+Yo0vnDZFrPdSSZP3vW/9lgeOd1T2uKofVcKCm2Ib3Iu1dnjwiGuaPs0u/otPcva73wXWosNFUM0U8Spm9BVBNRNcBGlqBu/Y8f0fsu5r32B4/wHX1NZqxTlXcun7b1m/5bjnhOGEOv7jj8tHhvvDIJhSLJdTX6kEc952MRd8+IPMWPbmLG2ulLKl0egav1pljOn4ShBArgA49q1Zy+ZvfpuXH30Mk8ulzfl8kKbp4ZrTm29a//RPGjwfD/0JczfuwoQN7i0EdmnReV8bKmLDwMy++K2c86fvZvayt2DbTgMcJDVIklGH2VCGyFGEtS4sYz7FGAhDCCPA4gYPsXvNkzz7Lz9g92OP45LURy3NNFtjykm6rujSWz+w4bebT1T4k1IAjOYIqzo7C6dp7ctW5JPGWspp6tLhYRER03b2PGZftJzZF7+VqefNJ54+DWxcx+BAPThXz+Ya/be6pVhbr+jqvQdXpbr/AAe3PsOeJ9aw67EnGNy+HVX1QVOT5oPAeu9x3t99SKLP3d7fX5os1r9mCgC4E8zKeqH+wJKFfxwa+XJszYUJQs075ypVXKVqTRhSmDGd1rPPov2cN9I67yya58wmntJO2NJMEMfYelbp0hRXrVIbKlI9PEBx126O7HiegWef48j25ynt249PEmwu9iaONbbWhig159cmon9949qnfz6Rt9dNAY1xjcuSd3Z1BRcMHfqgIJ+OrJnvBaoK6n3qk8S4WiKapoIIJrDYXIyNc1nSU48c6j0+TXHVCq5SxaeusebVRqGaMPRiTBALWIWKc9sQ+dohwm/93q/NjYWxlxZ7li/Pm7R0A8qHGxcnU4UaigcniqpqtvXgvaiOP44oIooxWt9yUxXEgI0QAoGScxjkV6j+QyRRz3X9/aWJPJwKvBbx6qirs9/rXLjUwrs1uzq7ePzV2ax5OvbOq5BlZKbeKRpzdbYq8LRBf6rI91c89XR/g8YfxNXZsdCoISa7PO1DvwhlkSLnieoZiExFaWbM5WmEIqoHVeQl0N96YWM44fL0sWi8GnhdMhYdvT7fuDM8DlZ1doa2WMxNzdWvz1cqzjX/21yf//8kZa7OOohVVQAAAABJRU5ErkJggg==">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;800&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: 公文卷宗 — 左側固定查詢欄（窄螢幕改為上方），右側分兩段：技術規則條文、解釋函令；條文卡以編別籤開頭，函令卡以條文籤＋公文字號開頭 */
+:root{
+  --paper:#f6f7f5; --sheet:#ffffff; --ink:#1d2733; --ink-2:#4c5866; --ink-3:#7c8794;
+  --rule:#dfe3e0; --accent:#1f4e79; --accent-soft:#e3ecf5; --seal:#a8322d;
+  --mark:#ffe58a; --mark-ink:#1d2733; --chip:#eef1ee;
+  --f-display:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#14181d; --sheet:#1b2027; --ink:#e4e8ec; --ink-2:#aab3bd; --ink-3:#7d8792;
+  --rule:#2c333c; --accent:#8fb8e0; --accent-soft:#22303f; --seal:#e07b72;
+  --mark:#6b5a12; --mark-ink:#fff6cf; --chip:#232a32; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#14181d; --sheet:#1b2027; --ink:#e4e8ec; --ink-2:#aab3bd; --ink-3:#7d8792;
+  --rule:#2c333c; --accent:#8fb8e0; --accent-soft:#22303f; --seal:#e07b72;
+  --mark:#6b5a12; --mark-ink:#fff6cf; --chip:#232a32; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:24px 60px;display:grid;grid-template-columns:300px minmax(0,1fr);gap:32px;align-items:start}
+@media (max-width:820px){.wrap{grid-template-columns:minmax(0,1fr);gap:20px;padding-inline:16px}}
+header.top{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;border-bottom:2px solid var(--ink);padding-bottom:12px}
+header.top h1{font-family:var(--f-display);font-weight:800;font-size:26px;margin:0;letter-spacing:.04em;text-wrap:balance}
+header.top .src{color:var(--ink-2);font-size:13px}
+aside{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);display:flex;flex-direction:column;gap:18px}
+@media (max-width:820px){aside{position:static}}
+.lbl{display:block;font-size:12px;letter-spacing:.12em;color:var(--ink-3);font-weight:700;margin-bottom:6px}
+input[type=text],select{width:100%;font:inherit;color:var(--ink);background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:9px 11px}
+input[type=text]:focus,select:focus,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+#q{font-size:17px;padding:11px 12px;border:1.5px solid var(--ink-2)}
+.hint{font-size:12.5px;color:var(--ink-3);margin-top:6px;line-height:1.6}
+.seg{display:flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--sheet)}
+.seg label{flex:1;text-align:center;padding:7px 4px;font-size:13.5px;cursor:pointer;color:var(--ink-2);border-left:1px solid var(--rule)}
+.seg label:first-child{border-left:0}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg input:checked+span{color:var(--accent);font-weight:700}
+.seg label:has(input:checked){background:var(--accent-soft)}
+.seg label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:-2px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;color:var(--ink-2);cursor:pointer}
+.chk input{margin-top:5px;accent-color:var(--accent)}
+.note{font-size:12.5px;color:var(--ink-2);border-left:3px solid var(--seal);padding:4px 0 4px 10px;line-height:1.65}
+main{min-width:0}
+.summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;margin-bottom:14px}
+.summary .n{font-family:var(--f-display);font-size:22px;font-weight:800}
+.summary .meta{color:var(--ink-3);font-size:13px}
+.summary select{width:auto;margin-left:auto;padding:5px 8px;font-size:13px}
+.groups{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.groups button{font:inherit;font-size:12.5px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink-2);border-radius:999px;padding:2px 10px;cursor:pointer;font-variant-numeric:tabular-nums}
+.groups button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--sheet)}
+ol.results{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--sheet);border:1px solid var(--rule);border-radius:4px;padding:16px 18px}
+.card .head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:13px}
+.tag{font-family:var(--f-display);font-weight:600;background:var(--ink);color:var(--sheet);padding:1px 9px;border-radius:2px;letter-spacing:.03em}
+.tag.stop{background:var(--seal);color:var(--sheet);font-family:var(--f-body);font-weight:700}
+.tag.att{background:var(--chip);color:var(--ink-2);font-family:var(--f-body);font-weight:500}
+.docno{font-family:var(--f-mono);font-size:13px;color:var(--ink);font-variant-numeric:tabular-nums}
+.date{font-family:var(--f-mono);color:var(--ink-2);font-variant-numeric:tabular-nums}
+.pg{margin-left:auto;color:var(--ink-3);font-size:12.5px;white-space:nowrap}
+.subj{font-family:var(--f-display);font-weight:600;font-size:16.5px;line-height:1.6;margin:8px 0 6px;text-wrap:pretty}
+.snip{color:var(--ink-2);font-size:14px;margin:0}
+.snip+.snip{margin-top:4px}
+mark{background:var(--mark);color:var(--mark-ink);padding:0 1px;border-radius:2px}
+mark.fz{background:transparent;color:inherit;border-bottom:2px dotted var(--seal)}
+details{margin-top:10px;border-top:1px dashed var(--rule);padding-top:8px}
+summary{cursor:pointer;color:var(--accent);font-size:13.5px;font-weight:500;width:max-content}
+.full{white-space:pre-wrap;font-size:14.5px;margin:8px 0 0;max-width:68ch}
+.actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.btn{font:inherit;font-size:12.5px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink-2);border-radius:4px;padding:3px 10px;cursor:pointer}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.more{display:block;margin:20px auto 0;font-size:14px;padding:8px 22px}
+.empty{background:var(--sheet);border:1px dashed var(--rule);border-radius:4px;padding:28px;color:var(--ink-2);text-align:center}
+.arttext{background:var(--accent-soft);padding:10px 12px;border-radius:4px;font-size:13.5px;white-space:pre-wrap;margin-top:8px;max-width:72ch}
+.fixed{color:var(--seal);font-size:11.5px}
+@media (prefers-reduced-motion:no-preference){.card{transition:border-color .15s}.card:hover{border-color:var(--ink-3)}}
+.srcs{display:flex;flex-direction:column;gap:6px;background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:8px 10px}
+.srcs .chk{font-size:14px;color:var(--ink)}
+.srcs .chk small{color:var(--ink-3);font-size:12px;margin-left:4px}
+.sec{display:flex;flex-direction:column;gap:12px}
+.sec+.sec{margin-top:34px}
+.sec-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;border-bottom:1px solid var(--rule);padding-bottom:8px}
+.sec-h h2{font-family:var(--f-display);font-weight:800;font-size:19px;margin:0;letter-spacing:.04em}
+.sec-h .cnt{font-family:var(--f-display);font-weight:800;font-size:19px;color:var(--accent);font-variant-numeric:tabular-nums}
+.sec-h .meta{color:var(--ink-3);font-size:13px}
+.sec-h select{width:auto;margin-left:auto;padding:5px 8px;font-size:13px}
+.card.rule{border-left:3px solid var(--accent)}
+.tag.code{background:var(--accent);}
+.loc{color:var(--ink-3);font-size:12.5px}
+.ruletext{white-space:pre-wrap;font-size:14.5px;margin:8px 0 0;max-width:70ch}
+.ruletext.clip{max-height:9.5em;overflow:hidden;-webkit-mask-image:linear-gradient(#000 70%,transparent);mask-image:linear-gradient(#000 70%,transparent)}
+.src-note{font-size:12.5px;color:var(--ink-2);line-height:1.7;background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:10px 12px}
+.src-note b{color:var(--ink)}
+.src-note a{color:var(--accent);word-break:break-all}
+footer.copy{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:14px;margin-top:10px;color:var(--ink-3);font-size:12.5px;display:flex;flex-wrap:wrap;gap:4px 16px;justify-content:space-between}
+footer.copy strong{color:var(--ink-2);font-weight:700}
+.top-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+.ver{font-family:var(--f-mono);font-size:12px;color:var(--ink-3)}
+a.btn{text-decoration:none;display:inline-block}
+.help{grid-column:1/-1;background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:18px 22px;font-size:14.5px;line-height:1.8}
+.help h2{font-family:var(--f-display);font-size:18px;margin:0 0 6px}
+.help h3{font-size:15px;margin:16px 0 4px;color:var(--accent)}
+.help ol,.help ul{margin:4px 0;padding-left:1.4em}
+.help code{font-family:var(--f-mono);background:var(--chip);padding:0 4px;border-radius:3px;font-size:13px}
+.help a{color:var(--accent);word-break:break-all}
+.help .close{float:right}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>建築技術規則・解釋函令查詢</h1>
+    <span class="src">內政部國土管理署 <span id="edition">114年12月版</span>・<span id="stat"></span></span>
+    <span class="top-actions"><span id="syncMsg"></span><span class="ver" id="ver"></span><button class="btn" id="help-btn" type="button">使用說明</button></span>
+  </header>
+
+  <section class="help" id="help" hidden>
+    <button class="btn close" id="help-close" type="button">關閉說明</button>
+    <h2>使用說明</h2>
+    <h3>查詢</h3>
+    <ol>
+      <li>在「關鍵字」輸入要找的詞，多個關鍵字用空白分隔，例如「停車位 寬度」。也可以輸入函令文號，例如 1090812277。</li>
+      <li>在「查詢資料」勾選要查建築技術規則條文、解釋函令，或兩個都查。</li>
+      <li>需要時再用「編／章」、「條次」、「函令年份」縮小範圍。函令結果上方的條文按鈕可以只看某一條。</li>
+      <li>條文卡片的「查看本條解釋函令」會列出該條全部函令；函令卡片的「查看條文」會顯示對應的條文。</li>
+      <li class="app-only">「開啟原書」會在 App 內打開原始 PDF，並跳到該頁，方便核對原文。</li>
+    </ol>
+    <h3>注意</h3>
+    <ul>
+      <li>內容是用掃描檔文字辨識（OCR）產生，可能有錯字。正式引用前，請依標示的頁碼回原書核對。</li>
+      <li>「容許辨識錯字」打勾時，4 字以上的關鍵字允許差 1 個字，這類結果以虛線底線標示。</li>
+      <li>附錄二「停止適用」的函令預設不顯示，可以取消勾選來查看。</li>
+    </ul>
+    <h3>iPad 離線版</h3>
+    <ul>
+      <li>用 Safari 打開本網址，按「分享」→「加入主畫面」，之後從主畫面的柴犬圖示開啟。</li>
+      <li>第一次開啟時會把條文、函令和三份原書 PDF（約 50 MB）存進 iPad，右上角顯示「資料已全部存在本機」後，就可以完全離線使用。建議用 Wi-Fi。</li>
+      <li>「開啟原書」會在 App 內打開 PDF 並跳到該頁，上方有「關閉」和放大、縮小按鈕。</li>
+      <li>請從主畫面圖示開啟；只在 Safari 分頁裡使用，資料比較容易被系統清掉。</li>
+    </ul>
+    <h3>每年更新資料</h3>
+    <ol>
+      <li>國土管理署每年 3 月印行新版，增列前一年的新函令。下載位址：<br><a href="https://www.nlma.gov.tw/ch/sglarticle/buildinterp" target="_blank" rel="noopener">https://www.nlma.gov.tw/ch/sglarticle/buildinterp</a></li>
+      <li>在「建築技術規則及解釋函令彙編」一欄下載三份 PDF：「建築技術規則」、「建築技術規則－建築設計施工編(上)解釋函令彙編」、「建築技術規則－建築設計施工編(下)解釋函令彙編」。</li>
+      <li>把三份 PDF 交給 Claude，請它重新辨識並產生新的 <code>建技規則函令查詢.db</code>。</li>
+      <li>在電腦上雙擊 <code>_原始碼\匯出iPad版.bat</code>，把 <code>_iPad版</code> 資料夾的內容用 GitHub Desktop 上傳（Commit → Push）。</li>
+      <li>iPad 下次連網時開啟，會自動下載有變動的部分。</li>
+    </ol>
+    <h3>版權</h3>
+    <p>Copyright © 2026 居研所聯合建築師事務所 版權所有。作者：CHIHFU HSIAO。<br>法規及函令原文著作屬內政部國土管理署，本工具僅供查詢參考。</p>
+  </section>
+
+  <aside>
+    <form id="f" autocomplete="off">
+      <label class="lbl" for="q">關鍵字</label>
+      <input type="text" id="q" placeholder="例：停車位 寬度">
+      <div class="hint">多個關鍵字用空白分隔。也可以輸入函令文號，例如 1090812277。</div>
+    </form>
+    <div>
+      <span class="lbl">查詢資料</span>
+      <div class="srcs">
+        <label class="chk"><input type="checkbox" id="src-rules" checked><span>建築技術規則條文<small id="n-rules"></small></span></label>
+        <label class="chk"><input type="checkbox" id="src-interp" checked><span>解釋函令<small id="n-interp"></small></span></label>
+      </div>
+    </div>
+    <div>
+      <span class="lbl">比對方式</span>
+      <div class="seg" role="radiogroup">
+        <label><input type="radio" name="mode" id="mode-and" value="and" checked><span>全部符合</span></label>
+        <label><input type="radio" name="mode" id="mode-or" value="or"><span>任一符合</span></label>
+      </div>
+    </div>
+    <div>
+      <label class="lbl" for="part">編／章</label>
+      <select id="part"><option value="">全部</option></select>
+    </div>
+    <div class="row2">
+      <div><label class="lbl" for="art">條次</label><input type="text" id="art" placeholder="如 60、3之4"></div>
+      <div><span class="lbl">函令範圍</span>
+        <div class="seg" role="radiogroup">
+          <label><input type="radio" name="scope" id="scope-all" value="all" checked><span>全文</span></label>
+          <label><input type="radio" name="scope" id="scope-subj" value="subj"><span>主旨</span></label>
+        </div>
+      </div>
+    </div>
+    <div class="row2">
+      <div><label class="lbl" for="y1">函令年份起（民國）</label><input type="text" id="y1" inputmode="numeric" placeholder="如 90"></div>
+      <div><label class="lbl" for="y2">年份迄</label><input type="text" id="y2" inputmode="numeric" placeholder="如 114"></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="hidestop" checked><span>不顯示附錄二「停止適用」的函令</span></label>
+    <label class="chk"><input type="checkbox" id="fuzzy" checked><span>容許辨識錯字：4 字以上的關鍵字允許 1 個字不同（以虛線底標示）</span></label>
+    <p class="note">內容由掃描檔文字辨識（OCR）而來，可能有錯字。正式引用前，請依標示的頁碼回原書核對。</p>
+    <div class="src-note">
+      <b>原始檔案下載位址</b><br>
+      內政部國土管理署「建築法令解釋函彙編」：<br>
+      <a href="https://www.nlma.gov.tw/ch/sglarticle/buildinterp" target="_blank" rel="noopener">https://www.nlma.gov.tw/ch/sglarticle/buildinterp</a><br>
+      收錄《建築技術規則》及《建築技術規則－建築設計施工編解釋函令彙編》上、下冊（114年12月版）。國土署每年 3 月印行新版，增列前一年的新函令；新版請由此網址下載後更新本查詢資料。
+    </div>
+  </aside>
+
+  <main>
+    <section class="sec" id="sec-rules">
+      <div class="sec-h"><h2>技術規則條文</h2><span class="cnt" id="cnt-rules">—</span><span class="meta" id="desc-rules"></span></div>
+      <ol class="results" id="res-rules"></ol>
+      <button class="btn more" id="more-rules" hidden>顯示更多</button>
+    </section>
+    <section class="sec" id="sec-interp">
+      <div class="sec-h"><h2>解釋函令</h2><span class="cnt" id="cnt-interp">—</span><span class="meta" id="desc-interp"></span>
+        <select id="sort" aria-label="函令排序">
+          <option value="book">依條文順序</option>
+          <option value="new">日期新→舊</option>
+          <option value="old">日期舊→新</option>
+        </select>
+      </div>
+      <div class="groups" id="groups"></div>
+      <ol class="results" id="res-interp"></ol>
+      <button class="btn more" id="more-interp" hidden>顯示更多</button>
+    </section>
+  </main>
+
+  <footer class="copy">
+    <span>Copyright © 2026 <strong>居研所聯合建築師事務所</strong> 版權所有・作者 CHIHFU HSIAO</span>
+    <span>法規及函令原文著作屬內政部國土管理署，本工具僅供查詢參考</span>
+  </footer>
+</div>
+
+<script src="data.js"></script>
+<script>
+const D = window.BCI_DATA;
+const R = D.records;            // 解釋函令
+const ARTS = D.articles || [];  // 彙編中引的條文（備用）
+const RULES = D.rules || [];    // 建築技術規則條文
+const $ = s => document.querySelector(s);
+const APP = D.app || null;            // 以程式執行時才有（含 PDF 與版本資訊）
+const VOLKEY = {'上冊':'vol1','下冊':'vol2'};
+function pdfLink(key,pdfpage){ const f=window.BCI_FILES && BCI_FILES.pdf[key]; return f ? `${f}#page=${pdfpage}` : ''; }
+document.querySelectorAll('.app-only').forEach(el=>el.hidden=!APP);
+if(APP){ $('#ver').textContent='v'+APP.version; if(APP.edition) $('#edition').textContent=APP.edition; }
+$('#help-btn').onclick=()=>{const h=$('#help'); h.hidden=!h.hidden; if(!h.hidden) h.scrollIntoView({behavior:'smooth'});};
+$('#help-close').onclick=()=>{$('#help').hidden=true;};
+
+// ---------- 正規化（同時建立索引對照，供標示用） ----------
+const VAR = {'臺':'台','裏':'裡','着':'著','綫':'線','汙':'污','峯':'峰','羣':'群','衆':'眾','爲':'為','啓':'啟','証':'證','佈':'布','畫':'劃'};
+function normChar(c){
+  const code=c.charCodeAt(0);
+  if(code>=0xFF01&&code<=0xFF5E) c=String.fromCharCode(code-0xFEE0);
+  c=c.toLowerCase();
+  return VAR[c]||c;
+}
+const SKIP=/[\s.,，。、‧:：;；'"“”‘’`!！?？()（）\[\]【】「」『』<>《》〈〉_\-—…·]/;
+function normMap(s){
+  let out='',map=[];
+  for(let i=0;i<s.length;i++){const c=s[i]; if(SKIP.test(c)) continue; out+=normChar(c); map.push(i);}
+  return {out,map};
+}
+function norm(s){return normMap(s).out}
+
+const artKey = a => { const m=(a||'').match(/第(\d+)條(?:之(\d+))?/); return m?[+m[1],m[2]?+m[2]:0]:[9999,0]; };
+const CN=['一','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十'];
+const chIdx = c => { const m=(c||'').match(/第(.+?)章/); return m? CN.indexOf(m[1])+1 : 99; };
+const CODE_ORDER=['總則編','建築設計施工編','建築構造編','建築設備編'];
+const shortCode = c => c==='建築設計施工編'?'設計施工編':c==='建築構造編'?'構造編':c==='建築設備編'?'設備編':c;
+
+// 函令：對應到法規的編與章
+R.forEach((r,i)=>{
+  r._order=i;
+  r._ns=norm(r.subject); r._nb=norm(r.body); r._nd=norm(r.docno);
+  const [y,m,d]=r.date.split('.').map(Number); r._t=y*10000+m*100+d; r._y=y;
+  r._ak=artKey(r.article);
+  r._code = r.part==='總則編' ? '總則編' : /^第.+章$/.test(r.part) ? '建築設計施工編' : r.part;
+  r._ch = /^第.+章$/.test(r.part) ? r.part : '';
+});
+RULES.forEach((a,i)=>{
+  a._order=i; a._nt=norm(a.text); a._ak=[a.n,a.sub||0];
+  a._ch=(a.chapter||'').split(' ')[0];
+});
+const interpCount=new Map();
+R.forEach(r=>{ if(r.status) return; const k=r._code+'|'+r._ak[0]+'|'+r._ak[1]; interpCount.set(k,(interpCount.get(k)||0)+1); });
+
+$('#stat').textContent = `建築技術規則 ${RULES.length.toLocaleString()} 條・解釋函令 ${R.length.toLocaleString()} 筆`;
+$('#n-rules').textContent = `${RULES.length.toLocaleString()} 條`;
+$('#n-interp').textContent = `${R.length.toLocaleString()} 筆`;
+
+// 編／章選單
+(function(){
+  const sel=$('#part'); const add=(v,t)=>{const o=document.createElement('option');o.value=v;o.textContent=t;sel.appendChild(o);};
+  const chName=new Map(); RULES.forEach(a=>{ if(a.code==='建築設計施工編'&&a.chapter&&!chName.has(a._ch)) chName.set(a._ch,a.chapter); });
+  R.forEach(r=>{ if(r._ch && !chName.has(r._ch)) chName.set(r._ch,r._ch); });
+  add('總則編','總則編');
+  add('建築設計施工編','設計施工編（全部）');
+  [...chName.keys()].sort((a,b)=>chIdx(a)-chIdx(b)).forEach(c=>add('建築設計施工編|'+c,'　'+chName.get(c)));
+  if(RULES.some(a=>a.code==='建築構造編')) add('建築構造編','構造編');
+  if(RULES.some(a=>a.code==='建築設備編')) add('建築設備編','設備編');
+  [...new Set(R.map(r=>r.part).filter(p=>p.startsWith('附錄')))].sort().forEach(p=>add(p,p+'（函令）'));
+})();
+
+// ---------- 比對 ----------
+function findExact(hay,k){const pos=[];let i=hay.indexOf(k);while(i>=0&&pos.length<50){pos.push([i,k.length,false]);i=hay.indexOf(k,i+1);}return pos;}
+function findFuzzy(hay,k){
+  const L=k.length,pos=[];
+  for(let i=0;i+L<=hay.length&&pos.length<20;i++){
+    let mis=0;
+    for(let j=0;j<L;j++){ if(hay[i+j]!==k[j] && ++mis>1) break; }
+    if(mis===1 && (hay[i]===k[0] || hay[i+L-1]===k[L-1])){ pos.push([i,L,true]); i+=L-1; }
+  }
+  return pos;
+}
+function readFilters(){
+  const raw=$('#q').value.trim();
+  const keys=raw.split(/\s+/).map(norm).filter(Boolean);
+  const artIn=$('#art').value.trim();
+  let artF=null; if(artIn){const m=artIn.match(/(\d+)(?:\s*之\s*(\d+))?/); if(m) artF=[+m[1],m[2]?+m[2]:null];}
+  const [pcode,pch]=($('#part').value||'').split('|');
+  return {
+    raw, keys, artF, pcode, pch:pch||'',
+    mode:document.querySelector('input[name=mode]:checked').value,
+    scope:document.querySelector('input[name=scope]:checked').value,
+    fuzzy:$('#fuzzy').checked,
+    hidestop:$('#hidestop').checked && !(pcode||'').startsWith('附錄二'),
+    y1:parseInt($('#y1').value)||0, y2:parseInt($('#y2').value)||999
+  };
+}
+function matchKeys(fields,F){
+  if(!F.keys.length) return true;
+  let ok=F.mode==='and';
+  for(const k of F.keys){
+    let found=false;
+    for(const f of fields){ if(f && f.includes(k)){found=true;break;} }
+    if(!found && F.fuzzy && k.length>=4) for(const f of fields){ if(f && findFuzzy(f,k).length){found=true;break;} }
+    if(F.mode==='and' && !found) return false;
+    if(F.mode==='or' && found) ok=true;
+  }
+  return ok;
+}
+const artOK=(ak,F)=>!F.artF || (ak[0]===F.artF[0] && (F.artF[1]===null || ak[1]===F.artF[1]));
+function searchRules(F){
+  return RULES.filter(a=>{
+    if(F.pcode && (a.code!==F.pcode || (F.pch && a._ch!==F.pch))) return false;
+    if(!artOK(a._ak,F)) return false;
+    return matchKeys([a._nt],F);
+  });
+}
+function searchInterp(F){
+  return R.filter(r=>{
+    if(F.hidestop && r.status) return false;
+    if(F.pcode && (r._code!==F.pcode || (F.pch && r._ch!==F.pch))) return false;
+    if(!artOK(r._ak,F)) return false;
+    if(r._y<F.y1||r._y>F.y2) return false;
+    const fields=[r._ns]; if(F.scope==='all') fields.push(r._nb);
+    if(F.keys.some(k=>/^\d{5,}$/.test(k))) fields.push(r._nd);
+    return matchKeys(fields,F);
+  });
+}
+
+// ---------- 標示 ----------
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function ranges(text,keys,fuzzy){
+  const {out,map}=normMap(text); const rs=[];
+  for(const k of keys){
+    let ps=findExact(out,k);
+    if(!ps.length && fuzzy && k.length>=4) ps=findFuzzy(out,k);
+    for(const [i,L,fz] of ps){ if(i<0) continue; rs.push([map[i], map[i+L-1]+1, fz]); }
+  }
+  rs.sort((a,b)=>a[0]-b[0]);
+  const merged=[]; for(const x of rs){ const l=merged[merged.length-1]; if(l&&x[0]<=l[1]){l[1]=Math.max(l[1],x[1]);l[2]=l[2]&&x[2];} else merged.push([...x]); }
+  return merged;
+}
+function hl(text,rs){
+  let h='',p=0; for(const [a,b,fz] of rs){ h+=esc(text.slice(p,a))+`<mark${fz?' class="fz"':''}>`+esc(text.slice(a,b))+'</mark>'; p=b; }
+  return h+esc(text.slice(p));
+}
+function snippets(text,rs,max=2){
+  const out=[]; let last=-1;
+  for(const [a,b] of rs){ if(a<last) continue; const s=Math.max(0,a-45), e=Math.min(text.length,b+70);
+    const sub=rs.filter(x=>x[0]>=s&&x[1]<=e).map(x=>[x[0]-s,x[1]-s,x[2]]);
+    out.push((s>0?'…':'')+hl(text.slice(s,e).replace(/\n/g,' '),sub)+(e<text.length?'…':'')); last=e; if(out.length>=max) break; }
+  return out;
+}
+function copy(text,btn){
+  const old=btn.textContent;
+  const done=()=>{btn.textContent='已複製';setTimeout(()=>btn.textContent=old,1400);};
+  try{ navigator.clipboard.writeText(text).then(done,()=>fallback()); }catch(e){fallback();}
+  function fallback(){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(_){}ta.remove();}
+}
+
+// ---------- 條文卡 ----------
+function ruleCard(a,keys,fuzzy){
+  const rs=keys.length?ranges(a.text,keys,fuzzy):[];
+  const li=document.createElement('li'); li.className='card rule';
+  const n=interpCount.get(a.code+'|'+a._ak[0]+'|'+a._ak[1])||0;
+  const loc=[a.chapter,a.section].filter(Boolean).join('　');
+  const long=a.text.length>220;
+  li.innerHTML=`
+    <div class="head">
+      <span class="tag code">${esc(shortCode(a.code))} ${esc(a.article)}</span>
+      <span class="loc">${esc(loc)}</span>
+      <span class="pg">技術規則 第${a.page}頁（PDF 第${a.pdfpage}頁）</span>
+    </div>
+    <div class="ruletext${long?' clip':''}">${hl(a.text,rs)}</div>
+    <div class="actions">
+      ${long?'<button class="btn" data-act="exp">展開全文</button>':''}
+      <button class="btn" data-act="copy">複製條文</button>
+      ${pdfLink('rules',a.pdfpage)?`<a class="btn" href="${pdfLink('rules',a.pdfpage)}" target="_blank" rel="noopener">開啟原書</a>`:''}
+      ${n?`<button class="btn" data-act="rel">查看本條解釋函令（${n}）</button>`:''}
+    </div>`;
+  const ex=li.querySelector('[data-act=exp]'); if(ex) ex.onclick=()=>{const t=li.querySelector('.ruletext'); t.classList.toggle('clip'); ex.textContent=t.classList.contains('clip')?'展開全文':'收合';};
+  li.querySelector('[data-act=copy]').onclick=e=>copy(`建築技術規則${a.code==='總則編'?'總則編':a.code}${a.article}\n${a.text}`,e.target);
+  const rel=li.querySelector('[data-act=rel]'); if(rel) rel.onclick=()=>{
+    $('#q').value=''; $('#part').value=a.code; $('#art').value=a._ak[0]+(a._ak[1]?'之'+a._ak[1]:'');
+    $('#src-interp').checked=true; groupFilter=''; render(); $('#sec-interp').scrollIntoView({behavior:'smooth',block:'start'});
+  };
+  return li;
+}
+
+// ---------- 函令卡 ----------
+function issuer(no){return /^營署/.test(no)?'內政部營建署':/^國署/.test(no)?'內政部國土管理署':/^(內授|台內|臺內|內政)/.test(no)?'內政部':'';}
+function cite(r){return `${issuer(r.docno)}${r.date}.${r.docno}`;}
+function articleText(r){
+  const k=r._ak;
+  const a=RULES.find(x=>x.code===r._code && x._ak[0]===k[0] && x._ak[1]===k[1]);
+  if(a) return `建築技術規則${shortCode(a.code)}${a.article}（第${a.page}頁）\n${a.text}`;
+  const b=ARTS.find(x=>x.vol===r.vol && (()=>{const ak=artKey(x.article);return ak[0]===k[0]&&ak[1]===k[1];})());
+  return b? b.text : null;
+}
+function interpCard(r,keys,fuzzy){
+  const rsS=keys.length?ranges(r.subject,keys,fuzzy):[];
+  const rsB=keys.length?ranges(r.body,keys,fuzzy):[];
+  const li=document.createElement('li'); li.className='card';
+  const pg = `${r.vol} 第${r.page}${r.page_end&&r.page_end!==r.page?'–'+r.page_end:''}頁（PDF 第${r.pdfpage}頁）`;
+  li.innerHTML=`
+    <div class="head">
+      <span class="tag">${esc(r.part||'')}${r.article?' '+esc(r.article):''}</span>
+      ${r.attach_of?`<span class="tag att">附件・${esc(r.attach_of)}</span>`:''}
+      ${r.status?`<span class="tag stop">${esc(r.status)}</span>`:''}
+      <span class="date">${esc(r.date)}${r.year_fixed?' <span class="fixed" title="原辨識年份有誤，已依文號或前後函令推定">（年份推定）</span>':''}</span>
+      <span class="docno">${esc(r.docno)}</span>
+      <span class="pg">函令彙編${pg}</span>
+    </div>
+    <p class="subj">${hl(r.subject,rsS)}</p>
+    ${snippets(r.body,rsB.filter(x=>x[0]>=Math.min(r.body.length,(r.body.indexOf('說明')+1)||0))).map(s=>`<p class="snip">${s}</p>`).join('')}
+    <details><summary>展開全文</summary><div class="full">${hl(r.body,rsB)}</div></details>
+    <div class="actions">
+      <button class="btn" data-act="cite">複製字號</button>
+      <button class="btn" data-act="copy">複製全文</button>
+      ${pdfLink(VOLKEY[r.vol],r.pdfpage)?`<a class="btn" href="${pdfLink(VOLKEY[r.vol],r.pdfpage)}" target="_blank" rel="noopener">開啟原書</a>`:''}
+      ${r.article?`<button class="btn" data-act="art">查看${esc(r.article)}條文</button>`:''}
+    </div>`;
+  li.querySelector('[data-act=cite]').onclick=e=>copy(cite(r),e.target);
+  li.querySelector('[data-act=copy]').onclick=e=>copy(`${cite(r)}\n${r.body}\n（${pg}）`,e.target);
+  const ab=li.querySelector('[data-act=art]'); if(ab) ab.onclick=()=>{
+    let box=li.querySelector('.arttext'); if(box){box.remove();return;}
+    const t=articleText(r); box=document.createElement('div'); box.className='arttext';
+    box.textContent=t||'找不到這一條的條文（可能是辨識時未能切出）。'; li.appendChild(box);
+  };
+  return li;
+}
+
+// ---------- 輸出 ----------
+let groupFilter='';
+const lists={
+  rules:{items:[],shown:0,page:10,ol:'#res-rules',btn:'#more-rules',make:ruleCard},
+  interp:{items:[],shown:0,page:30,ol:'#res-interp',btn:'#more-interp',make:interpCard}
+};
+let F=null;
+function fill(name){
+  const L=lists[name]; const ol=$(L.ol); const end=Math.min(L.items.length,L.shown+L.page);
+  for(let i=L.shown;i<end;i++) ol.appendChild(L.make(L.items[i],F.keys,F.fuzzy));
+  L.shown=end; $(L.btn).hidden=L.shown>=L.items.length;
+  $(L.btn).textContent=`顯示更多（尚有 ${L.items.length-L.shown} ${name==='rules'?'條':'筆'}）`;
+}
+function reset(name,items,emptyMsg){
+  const L=lists[name]; L.items=items; L.shown=0; $(L.ol).innerHTML='';
+  if(!items.length){ $(L.ol).innerHTML=`<li class="empty">${emptyMsg}</li>`; $(L.btn).hidden=true; return; }
+  fill(name);
+}
+function render(){
+  F=readFilters();
+  const desc = F.keys.length? `符合「${F.raw}」` : '（未輸入關鍵字，列出全部）';
+  const useR=$('#src-rules').checked, useI=$('#src-interp').checked;
+  $('#sec-rules').hidden=!useR; $('#sec-interp').hidden=!useI;
+  if(useR){
+    const rr=searchRules(F);
+    $('#cnt-rules').textContent=`${rr.length.toLocaleString()} 條`; $('#desc-rules').textContent=desc;
+    reset('rules',rr,'沒有符合的條文。可以改成「任一符合」或換個說法。');
+  }
+  if(useI){
+    const out=searchInterp(F);
+    const sort=$('#sort').value;
+    if(sort==='new') out.sort((a,b)=>b._t-a._t); else if(sort==='old') out.sort((a,b)=>a._t-b._t); else out.sort((a,b)=>a._order-b._order);
+    const cnt=new Map(); out.forEach(r=>{const k=(r._code==='總則編'?'總則':'')+(r.article||'—');cnt.set(k,(cnt.get(k)||0)+1);});
+    if(groupFilter && !cnt.has(groupFilter)) groupFilter='';
+    const g=$('#groups'); g.innerHTML='';
+    if(cnt.size>1){
+      [...cnt.entries()].sort((a,b)=>{const za=a[0].startsWith('總則')?0:1, zb=b[0].startsWith('總則')?0:1; const x=artKey(a[0]),y=artKey(b[0]);return za-zb||x[0]-y[0]||x[1]-y[1];}).slice(0,60).forEach(([k,n])=>{
+        const b=document.createElement('button'); b.textContent=`${k} ${n}`; b.setAttribute('aria-pressed',groupFilter===k);
+        b.onclick=()=>{groupFilter=groupFilter===k?'':k; render();}; g.appendChild(b);
+      });
+    }
+    const cur = groupFilter? out.filter(r=>((r._code==='總則編'?'總則':'')+(r.article||'—'))===groupFilter) : out;
+    $('#cnt-interp').textContent=`${cur.length.toLocaleString()} 筆`; $('#desc-interp').textContent=desc;
+    reset('interp',cur,'沒有符合的函令。可以改成「任一符合」、減少關鍵字，或換一個說法（例如「車位」改「停車位」）。');
+  }
+}
+$('#more-rules').onclick=()=>fill('rules');
+$('#more-interp').onclick=()=>fill('interp');
+let tm; const deb=()=>{clearTimeout(tm);tm=setTimeout(()=>{groupFilter='';render();},220);};
+['#q','#art','#y1','#y2'].forEach(s=>$(s).addEventListener('input',deb));
+['#part','#sort','#fuzzy','#hidestop','#src-rules','#src-interp'].forEach(s=>$(s).addEventListener('change',()=>{groupFilter='';render();}));
+document.querySelectorAll('input[name=mode],input[name=scope]').forEach(x=>x.addEventListener('change',()=>{groupFilter='';render();}));
+$('#f').addEventListener('submit',e=>{e.preventDefault();render();});
+$('#q').value=(window.__Q||'停車位 寬度');
+render();
+</script>
+
+<div id="pv" class="hidden"><div class="bar"><button class="x" id="pvClose" type="button">關閉</button><span class="t" id="pvTitle"></span>
+<button id="pvOut" type="button">－</button><button id="pvIn" type="button">＋</button><span id="pvPage" style="min-width:76px;text-align:right"></span></div>
+<div id="pvBody"></div></div>
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const F = window.BCI_FILES || {pdf:{}, titles:{}, assets:[]};
+const nameOf = {};
+Object.keys(F.pdf).forEach(k=>nameOf[F.pdf[k]] = F.titles[k] || k);
+const msg = t => { const m=$("syncMsg"); if(m) m.textContent = t; };
+msg("iPad 離線版");
+
+// ---------- 註冊離線程式（service worker）
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").then(()=>syncAssets()).catch(e=>msg("離線功能無法啟用："+e.message));
+}
+try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
+
+// ---------- 把原書 PDF 下載存進 iPad（只下載新增或有變動的）
+let syncing=false;
+async function syncAssets(){
+  if(syncing || !("caches" in window)) return;
+  syncing=true;
+  try{
+    const c = await caches.open("bci-assets");
+    let old={}; try{ const r=await c.match("__hashes.json"); if(r) old=await r.json(); }catch(e){}
+    const have = new Set((await c.keys()).map(r=>r.url));
+    const abs = u => new URL(u, location.href).href;
+    const want = F.assets;
+    const todo = want.filter(([u,h])=>old[u]!==h || !have.has(abs(u)));
+    let done=0, fail=0;
+    const save = ()=>c.put("__hashes.json", new Response(JSON.stringify(old), {headers:{"Content-Type":"application/json"}}));
+    for(const [u,h] of todo){
+      msg(`下載原書 PDF ${done+1}/${todo.length}…（請保持開啟）`);
+      try{
+        const r = await fetch(u, {cache:"no-cache"});
+        if(!r.ok) throw new Error(r.status);
+        await c.put(u, r); old[u]=h; await save();
+      }catch(e){ fail++; }
+      done++;
+    }
+    const keep = new Set(want.map(([u])=>abs(u))); keep.add(abs("__hashes.json"));
+    for(const r of await c.keys()){ if(!keep.has(r.url)) await c.delete(r); }
+    Object.keys(old).forEach(u=>{ if(!keep.has(abs(u))) delete old[u]; });
+    await save();
+    msg(fail ? `有 ${fail} 份 PDF 下載失敗，連上網路後重新開啟會再補下載` : "iPad 離線版．資料已全部存在本機");
+  }catch(e){ msg("離線資料下載失敗："+e.message); }
+  syncing=false;
+}
+window.addEventListener("online", ()=>syncAssets());
+
+// ---------- PDF 檢視器（pdf.js；可離線、可跳到指定頁）
+let pdfDoc=null, zoom=1, observer=null, curUrl="", gen=0;
+if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = "lib/pdf.worker.min.js";
+async function openPdf(url, page){
+  $("pv").classList.remove("hidden");
+  $("pvTitle").textContent = nameOf[url] || url;
+  const body=$("pvBody");
+  if(url!==curUrl || !pdfDoc){
+    body.innerHTML = '<div id="pvMsg">開啟中…</div>';
+    try{
+      const buf = await (await fetch(url)).arrayBuffer();
+      pdfDoc = await pdfjsLib.getDocument({data:buf}).promise;
+      curUrl=url; zoom=1;
+    }catch(e){ body.innerHTML = '<div id="pvMsg">無法開啟 PDF（'+e.message+'）。<br>若尚未下載完離線資料，請連上網路後再試。</div>'; pdfDoc=null; return; }
+    await layout();
+  }
+  goPage(page||1);
+}
+async function layout(){
+  const body=$("pvBody"), my=++gen;
+  if(observer) observer.disconnect();
+  body.innerHTML="";
+  const p1 = await pdfDoc.getPage(1); const v1 = p1.getViewport({scale:1});
+  const W = Math.round((body.clientWidth-20) * zoom);
+  for(let i=1;i<=pdfDoc.numPages;i++){
+    const d=document.createElement("div"); d.className="pg"; d.dataset.n=i;
+    d.style.width=W+"px"; d.style.height=Math.round(W*v1.height/v1.width)+"px";
+    d.innerHTML='<span class="no">'+i+' / '+pdfDoc.numPages+'</span>';
+    body.appendChild(d);
+  }
+  observer = new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting) render(e.target, my); }), {root:body, rootMargin:"600px 0px"});
+  body.querySelectorAll(".pg").forEach(d=>observer.observe(d));
+}
+async function render(d, my){
+  if(d.dataset.done==="1") return; d.dataset.done="1";
+  const pg = await pdfDoc.getPage(+d.dataset.n); if(my!==gen) return;
+  const W = parseFloat(d.style.width), v0 = pg.getViewport({scale:1});
+  const dpr = Math.min(window.devicePixelRatio||1, 2), scale = W/v0.width*dpr;
+  const vp = pg.getViewport({scale});
+  d.style.height = Math.round(W*v0.height/v0.width)+"px";
+  const cv=document.createElement("canvas"); cv.width=Math.floor(vp.width); cv.height=Math.floor(vp.height);
+  d.insertBefore(cv, d.firstChild);
+  try{ await pg.render({canvasContext:cv.getContext("2d"), viewport:vp}).promise; }catch(e){}
+}
+function goPage(n){
+  const d=$("pvBody").querySelector('.pg[data-n="'+n+'"]');
+  if(d) $("pvBody").scrollTop = d.offsetTop - 10;
+  if(pdfDoc) $("pvPage").textContent = n+" / "+pdfDoc.numPages;
+}
+function curPage(){
+  const b=$("pvBody"), y=b.scrollTop+b.clientHeight/3;
+  let n=1; b.querySelectorAll(".pg").forEach(d=>{ if(d.offsetTop<=y) n=+d.dataset.n; });
+  return n;
+}
+$("pvBody").addEventListener("scroll", ()=>{ if(pdfDoc) $("pvPage").textContent = curPage()+" / "+pdfDoc.numPages; });
+async function rezoom(f){ if(!pdfDoc) return; const n=curPage(); zoom=Math.min(4,Math.max(0.5,zoom*f)); await layout(); goPage(n); }
+$("pvIn").onclick=()=>rezoom(1.25); $("pvOut").onclick=()=>rezoom(0.8);
+$("pvClose").onclick=()=>$("pv").classList.add("hidden");
+
+// ---------- 攔截「開啟原書」：在 App 內開啟（主畫面 App 沒有上一頁按鈕）
+document.addEventListener("click", e=>{
+  const a = e.target.closest && e.target.closest("a[href]"); if(!a) return;
+  const h = a.getAttribute("href");
+  if(h.startsWith("pdf/")){
+    e.preventDefault(); e.stopPropagation();
+    const [u,frag] = h.split("#"); const m = /page=(\d+)/.exec(frag||"");
+    openPdf(u, m ? +m[1] : 1);
+  }
+}, true);
+})();
+</script>
+
+</html>
